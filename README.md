@@ -8,7 +8,7 @@ Accounts and their names come from Codex Switcher. Add or rename accounts there,
 
 ## Install on this Mac
 
-You need macOS, Raycast, the Codex desktop app, Python 3, Node.js 22.22.2 or later, and npm. Install Codex Switcher with its bundled `codex-web` executable and save at least one account. Tested with Codex Switcher 0.2.20.
+You need macOS, Raycast, the Codex desktop app, Python 3, Node.js 22.22.2 or later, and npm. Install [Codex Switcher](https://github.com/Lampese/codex-switcher/releases) with its bundled `codex-web` executable and save at least one account. Tested with Codex Switcher 0.2.20.
 
 1. Clone this repository and open its directory:
 
