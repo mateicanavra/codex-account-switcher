@@ -255,12 +255,12 @@ def operate(expected, account_id, check_only=False, expect_identity=None):
         try:
             if not active or active['id'] != selected['id']:
                 if not api.request('check_codex_processes')['can_switch']:
-                    print('Closing Codex gracefully...', flush=True)
+                    print('Force closing Codex and its running sessions...', flush=True)
                     closed = True
                     result = api.request('kill_codex_processes',
-                                         {'reopenDesktop': False, 'forceClose': False})
+                                         {'reopenDesktop': False, 'forceClose': True})
                     if result.get('failed_pids'):
-                        raise RuntimeError('Codex could not close gracefully. Finish its sessions and retry.')
+                        raise RuntimeError('Codex could not be force closed. No account change performed.')
                 deadline = time.monotonic() + 15
                 while not api.request('check_codex_processes')['can_switch']:
                     if time.monotonic() >= deadline:

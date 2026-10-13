@@ -103,6 +103,101 @@ class SelectionTests(unittest.TestCase):
         load.assert_not_called()
 
 
+class RunningSessionTests(unittest.TestCase):
+    def setUp(self):
+        self.selected = {'id': 'new-session', 'name': 'Example (Work)', 'is_active': False}
+        self.active = {'id': 'old-session', 'name': 'Example (Personal)'}
+        self.running = True
+        self.events = []
+        self.api = unittest.mock.Mock()
+        self.api.request.side_effect = self.request
+        for setting in (
+            patch.object(helper, 'MACHINES', {'laptop': {'name': 'Test Laptop'}}),
+            patch.object(helper, 'verify_target', return_value='laptop'),
+            patch.object(helper, 'operation_lock', return_value=nullcontext()),
+            patch.object(helper, 'api_server', return_value=nullcontext(self.api)),
+        ):
+            setting.start()
+            self.addCleanup(setting.stop)
+        self.reopen_patch = patch.object(helper, 'reopen_codex')
+        self.reopen = self.reopen_patch.start()
+        self.addCleanup(self.reopen_patch.stop)
+
+    def request(self, command, payload=None):
+        self.events.append(command)
+        if command == 'list_accounts':
+            return [self.selected]
+        if command == 'get_active_account_info':
+            return self.active
+        if command == 'check_codex_processes':
+            return {'can_switch': not self.running}
+        if command == 'kill_codex_processes':
+            # Model a running session that refuses graceful quit.
+            if payload.get('forceClose'):
+                self.running = False
+                return {'failed_pids': [], 'killed_pids': [123]}
+            return {'failed_pids': [123], 'killed_pids': []}
+        if command == 'switch_account':
+            self.assertFalse(self.running, 'Account credentials must not change while Codex runs.')
+            self.assertEqual(payload['accountId'], self.selected['id'])
+            self.active = self.selected
+            return None
+        self.fail('Unexpected API request: ' + command)
+
+    def run_switch(self, **kwargs):
+        with redirect_stdout(io.StringIO()):
+            helper.operate('laptop', self.selected['id'], **kwargs)
+
+    def test_running_session_that_refuses_quit_is_switched_and_reopened(self):
+        self.run_switch()
+        self.assertEqual(self.active['id'], self.selected['id'])
+        self.reopen.assert_called_once_with()
+        kill_index = self.events.index('kill_codex_processes')
+        switch_index = self.events.index('switch_account')
+        self.assertIn('check_codex_processes', self.events[kill_index + 1:switch_index])
+        self.assertEqual(self.events[switch_index + 1], 'get_active_account_info')
+
+    def test_failed_force_close_never_switches_and_attempts_reopen(self):
+        def request(command, payload=None):
+            if command == 'kill_codex_processes':
+                return {'failed_pids': [123], 'killed_pids': []}
+            return self.request(command, payload)
+        self.api.request.side_effect = request
+        with self.assertRaisesRegex(RuntimeError, 'could not be force closed'):
+            self.run_switch()
+        self.assertEqual(self.active['id'], 'old-session')
+        self.assertNotIn('switch_account', self.events)
+        self.reopen.assert_called_once_with()
+
+    def test_desktop_still_running_after_force_close_never_switches(self):
+        def request(command, payload=None):
+            if command == 'kill_codex_processes':
+                return {'failed_pids': [], 'killed_pids': [123]}
+            return self.request(command, payload)
+        self.api.request.side_effect = request
+        with patch.object(helper.time, 'monotonic', side_effect=[0, 16]):
+            with self.assertRaisesRegex(RuntimeError, 'still running'):
+                self.run_switch()
+        self.assertEqual(self.active['id'], 'old-session')
+        self.assertNotIn('switch_account', self.events)
+        self.reopen.assert_called_once_with()
+
+    def test_preflight_does_not_interrupt_running_sessions(self):
+        self.run_switch(check_only=True)
+        self.assertTrue(self.running)
+        self.assertNotIn('kill_codex_processes', self.events)
+        self.assertNotIn('switch_account', self.events)
+        self.reopen.assert_not_called()
+
+    def test_already_active_account_does_not_interrupt_running_sessions(self):
+        self.active = self.selected
+        self.run_switch()
+        self.assertTrue(self.running)
+        self.assertNotIn('kill_codex_processes', self.events)
+        self.assertNotIn('switch_account', self.events)
+        self.reopen.assert_called_once_with()
+
+
 class AllDevicesTests(unittest.TestCase):
     def setUp(self):
         self.identity = helper.auth_identity(record())['identity']

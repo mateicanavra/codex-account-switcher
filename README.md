@@ -6,6 +6,8 @@ Light and dark icons follow Raycast’s appearance automatically.
 
 Accounts and their names come from Codex Switcher. Add or rename accounts there, then refresh the list in Raycast.
 
+Switching to a different account force closes Codex and its child processes, including running sessions, before changing the account. Running tasks are interrupted; you do not need to finish them or dismiss a quit dialog. The extension verifies that Codex has stopped, switches the account, and reopens Codex. Selecting the already active account leaves its running sessions alone.
+
 ## Install on this Mac
 
 You need macOS, Raycast, the Codex desktop app, Python 3, Node.js 22.22.2 or later, and npm. Install [Codex Switcher](https://github.com/Lampese/codex-switcher/releases) with its bundled `codex-web` executable and save at least one account. Tested with Codex Switcher 0.2.20.
@@ -108,7 +110,7 @@ For duplicate sessions of the same account and workspace, the extension preserve
 | Helper is missing | Run `npm run setup` on the affected Mac. |
 | Codex Switcher or `codex-web` is missing | Install Codex Switcher with its bundled executable on the affected Mac. |
 | An account is absent from All | Save that ChatGPT account and workspace on every configured Mac, then refresh. |
-| Codex cannot close gracefully | Finish running sessions or close Codex on that Mac, then retry. Its account stays unchanged if closing fails. |
+| Codex cannot be force closed | Check permissions and any macOS administrator prompt on that Mac. Its account stays unchanged if closing fails. |
 | Codex cannot reopen | Open Codex manually. Check its installation and any macOS permission prompt. |
 
 ## Development and sharing
