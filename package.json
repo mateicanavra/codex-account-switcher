@@ -1,0 +1,40 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "codex-account-switcher",
+  "title": "Codex Account Switcher",
+  "description": "Switch a saved Codex account on this Mac or another configured Mac over SSH and reopen Codex.",
+  "icon": "codex-switcher.png",
+  "author": "mateicanavra",
+  "license": "MIT",
+  "categories": [
+    "Developer Tools"
+  ],
+  "commands": [
+    {
+      "name": "switch-account",
+      "title": "Switch Codex Account",
+      "description": "Choose a Mac and one of its saved accounts, then switch and reopen Codex.",
+      "mode": "view"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "2.7.3",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.9.0"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "typecheck": "tsc --noEmit",
+    "setup": "node scripts/setup.mjs",
+    "identify": "/usr/bin/python3 assets/switch_account.py --identify",
+    "test": "/usr/bin/python3 -m unittest discover -s tests -v"
+  },
+  "platforms": [
+    "macOS"
+  ]
+}

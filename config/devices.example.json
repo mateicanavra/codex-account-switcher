@@ -1,0 +1,16 @@
+{
+  "devices": [
+    {
+      "id": "laptop",
+      "name": "Laptop",
+      "ssh": "laptop",
+      "identity": "REPLACE_WITH_THIS_MAC_IDENTITY_HASH"
+    },
+    {
+      "id": "desktop",
+      "name": "Desktop",
+      "ssh": "desktop",
+      "identity": "REPLACE_WITH_REMOTE_MAC_IDENTITY_HASH"
+    }
+  ]
+}

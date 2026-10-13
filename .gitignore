@@ -1,0 +1,14 @@
+node_modules
+dist/
+.DS_Store
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+devices.json
+*.local.json
+private/
+*.log
+*.rayext
+.coverage
